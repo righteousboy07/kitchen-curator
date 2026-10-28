@@ -1,7 +1,6 @@
 import Foundation
+import Combine
 
-/// Offline JSON persistence with atomic writes. Intended as an initial
-/// store until a SwiftData migration is designed and tested.
 @MainActor
 final class RecipeStore: ObservableObject {
     @Published private(set) var recipes: [KitchenRecipe] = []
@@ -29,46 +28,40 @@ final class RecipeStore: ObservableObject {
                 errorMessage = nil
                 return
             }
-            let data = try Data(contentsOf: fileURL)
-            let loaded = try decoder.decode([KitchenRecipe].self, from: data)
+            let loaded = try decoder.decode([KitchenRecipe].self, from: Data(contentsOf: fileURL))
             guard loaded.allSatisfy({ $0.schemaVersion == 1 }) else {
                 throw StoreError.unsupportedVersion
             }
             recipes = loaded
             errorMessage = nil
         } catch {
-            // Never overwrite a file that failed to decode.
             errorMessage = "Unable to read saved recipes: \(error.localizedDescription)"
         }
     }
 
     func upsert(_ recipe: KitchenRecipe) {
         guard errorMessage == nil else { return }
-        let old = recipes
+        let previous = recipes
         if let index = recipes.firstIndex(where: { $0.id == recipe.id }) {
             recipes[index] = recipe
         } else {
             recipes.append(recipe)
         }
-        if !save() { recipes = old }
+        if !save() { recipes = previous }
     }
 
     func delete(id: UUID) {
         guard errorMessage == nil else { return }
-        let old = recipes
+        let previous = recipes
         recipes.removeAll { $0.id == id }
-        if !save() { recipes = old }
+        if !save() { recipes = previous }
     }
 
     @discardableResult
     private func save() -> Bool {
         do {
-            try FileManager.default.createDirectory(
-                at: fileURL.deletingLastPathComponent(),
-                withIntermediateDirectories: true
-            )
-            let data = try encoder.encode(recipes)
-            try data.write(to: fileURL, options: .atomic)
+            try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try encoder.encode(recipes).write(to: fileURL, options: .atomic)
             errorMessage = nil
             return true
         } catch {
@@ -79,8 +72,6 @@ final class RecipeStore: ObservableObject {
 
     private enum StoreError: LocalizedError {
         case unsupportedVersion
-        var errorDescription: String? {
-            "This recipe file uses an unsupported schema version."
-        }
+        var errorDescription: String? { "Unsupported recipe schema version." }
     }
 }
