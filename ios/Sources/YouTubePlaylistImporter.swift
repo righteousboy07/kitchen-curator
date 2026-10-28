@@ -31,7 +31,9 @@ struct YouTubePlaylistImporter {
             if let pageToken {
                 components.queryItems?.append(URLQueryItem(name: "pageToken", value: pageToken))
             }
-            let (data, response) = try await session.data(from: components.url!)
+            var request = URLRequest(url: components.url!)
+            request.timeoutInterval = 30
+            let (data, response) = try await session.data(for: request)
             guard let http = response as? HTTPURLResponse else { throw ImportError.invalidResponse }
             guard (200...299).contains(http.statusCode) else { throw ImportError.httpStatus(http.statusCode) }
             let page = try JSONDecoder().decode(PlaylistItemsPage.self, from: data)
