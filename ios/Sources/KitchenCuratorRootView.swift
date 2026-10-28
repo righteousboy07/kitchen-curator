@@ -40,6 +40,8 @@ struct KitchenCuratorRootView: View {
             if section == .recipes {
                 RecipeLibraryView()
                     .navigationTitle(section.title)
+            } else if section == .playlists {
+                PlaylistSourcesView()
             } else {
                 ContentUnavailableView(
                     section.title,
@@ -53,13 +55,14 @@ struct KitchenCuratorRootView: View {
 }
 
 enum KitchenSection: String, CaseIterable, Identifiable, Hashable {
-    case recipes, cooking, shopping, planning
+    case recipes, playlists, cooking, shopping, planning
 
     var id: Self { self }
 
     var title: String {
         switch self {
         case .recipes: "Recipes"
+        case .playlists: "Playlists"
         case .cooking: "Cooking"
         case .shopping: "Shopping"
         case .planning: "Meal Plan"
@@ -69,6 +72,7 @@ enum KitchenSection: String, CaseIterable, Identifiable, Hashable {
     var symbol: String {
         switch self {
         case .recipes: "books.vertical"
+        case .playlists: "play.rectangle"
         case .cooking: "frying.pan"
         case .shopping: "cart"
         case .planning: "calendar"
