@@ -16,7 +16,10 @@ final class PlaylistSourceStore: ObservableObject {
         load()
     }
 
+    func clearError() { errorMessage = nil }
+
     func add(_ rawURL: String) {
+        errorMessage = nil
         guard let url = URL(string: rawURL.trimmingCharacters(in: .whitespacesAndNewlines)),
               let host = url.host?.lowercased(),
               ["youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com"].contains(host),
