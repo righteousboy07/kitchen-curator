@@ -27,7 +27,7 @@ struct RecipeLibraryView: View {
         .searchable(text: $query, prompt: "Search recipes")
         .navigationDestination(for: UUID.self) { id in
             if let recipe = store.recipes.first(where: { $0.id == id }) {
-                RecipeDetailView(recipe: recipe)
+                RecipeDetailView(recipeID: recipe.id)
             } else {
                 ContentUnavailableView("Recipe unavailable", systemImage: "book.closed")
             }
@@ -58,28 +58,51 @@ struct RecipeLibraryView: View {
 }
 
 struct RecipeDetailView: View {
-    let recipe: KitchenRecipe
+    @EnvironmentObject private var store: RecipeStore
+    let recipeID: UUID
+
+    private var recipe: KitchenRecipe? {
+        store.recipes.first { $0.id == recipeID }
+    }
 
     var body: some View {
-        List {
-            if !recipe.ingredients.isEmpty {
-                Section("Ingredients") {
-                    ForEach(recipe.ingredients) { ingredient in
-                        Text(ingredient.name)
+        Group {
+            if let recipe {
+                List {
+                    Section("Ingredients") {
+                        if recipe.ingredients.isEmpty {
+                            Text("No ingredients yet").foregroundStyle(.secondary)
+                        }
+                        ForEach(recipe.ingredients) { ingredient in
+                            HStack {
+                                Text(ingredient.name)
+                                Spacer()
+                                if let amount = ingredient.quantity {
+                                    Text(amount.formatted())
+                                        .foregroundStyle(.secondary)
+                                }
+                                if let unit = ingredient.unit {
+                                    Text(unit).foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+                    Section("Directions") {
+                        if recipe.steps.isEmpty {
+                            Text("No instructions yet").foregroundStyle(.secondary)
+                        }
+                        ForEach(recipe.steps.indices, id: \.self) { index in
+                            Text("\(index + 1). \(recipe.steps[index].text)")
+                        }
                     }
                 }
-            }
-            if !recipe.steps.isEmpty {
-                Section("Directions") {
-                    ForEach(recipe.steps.indices, id: \.self) { index in
-                        Text("\(index + 1). \(recipe.steps[index].text)")
-                    }
+                .navigationTitle(recipe.title)
+                .toolbar {
+                    NavigationLink("Edit", destination: RecipeEditorView(recipeID: recipeID))
                 }
-            }
-            if recipe.ingredients.isEmpty && recipe.steps.isEmpty {
-                ContentUnavailableView("Recipe is empty", systemImage: "pencil", description: Text("Ingredient and instruction editing is coming next."))
+            } else {
+                ContentUnavailableView("Recipe unavailable", systemImage: "book.closed")
             }
         }
-        .navigationTitle(recipe.title)
     }
 }
