@@ -37,12 +37,17 @@ struct KitchenCuratorRootView: View {
     @ViewBuilder
     private func sectionContent(_ section: KitchenSection) -> some View {
         NavigationStack {
-            ContentUnavailableView(
-                section.title,
-                systemImage: section.symbol,
-                description: Text("Recipe storage and \(section.title.lowercased()) features are coming next.")
-            )
-            .navigationTitle(section.title)
+            if section == .recipes {
+                RecipeLibraryView()
+                    .navigationTitle(section.title)
+            } else {
+                ContentUnavailableView(
+                    section.title,
+                    systemImage: section.symbol,
+                    description: Text("This feature is under development.")
+                )
+                .navigationTitle(section.title)
+            }
         }
     }
 }
