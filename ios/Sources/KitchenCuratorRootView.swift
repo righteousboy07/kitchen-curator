@@ -1,33 +1,35 @@
 import SwiftUI
 
-/// Adaptive shell for a universal iPhone and iPad application.
-/// Integrate this view into the Xcode target when the native app is added.
+/// Native adaptive navigation shared by iPhone and iPad.
+/// Width-class adaptation also responds to iPad multitasking windows.
 struct KitchenCuratorRootView: View {
-    @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var selection: KitchenSection = .recipes
 
     var body: some View {
         Group {
-            if sizeClass == .compact {
+            if horizontalSizeClass == .compact {
                 TabView(selection: $selection) {
                     ForEach(KitchenSection.allCases) { section in
                         sectionContent(section)
-                            .tabItem {
-                                Label(section.title, systemImage: section.symbol)
-                            }
+                            .tabItem { Label(section.title, systemImage: section.symbol) }
                             .tag(section)
                     }
                 }
             } else {
                 NavigationSplitView {
-                    List(KitchenSection.allCases, selection: $selection) { section in
-                        Label(section.title, systemImage: section.symbol)
-                            .tag(section)
+                    List(selection: $selection) {
+                        ForEach(KitchenSection.allCases) { section in
+                            Label(section.title, systemImage: section.symbol)
+                                .tag(section)
+                        }
                     }
+                    .listStyle(.sidebar)
                     .navigationTitle("Kitchen Curator")
                 } detail: {
                     sectionContent(selection)
                 }
+                .navigationSplitViewStyle(.balanced)
             }
         }
     }
@@ -38,16 +40,18 @@ struct KitchenCuratorRootView: View {
             ContentUnavailableView(
                 section.title,
                 systemImage: section.symbol,
-                description: Text("The \(section.title.lowercased()) screen will be connected to the recipe store.")
+                description: Text("Recipe storage and \(section.title.lowercased()) features are coming next.")
             )
             .navigationTitle(section.title)
         }
     }
 }
 
-enum KitchenSection: String, CaseIterable, Identifiable {
+enum KitchenSection: String, CaseIterable, Identifiable, Hashable {
     case recipes, cooking, shopping, planning
+
     var id: Self { self }
+
     var title: String {
         switch self {
         case .recipes: "Recipes"
@@ -56,6 +60,7 @@ enum KitchenSection: String, CaseIterable, Identifiable {
         case .planning: "Meal Plan"
         }
     }
+
     var symbol: String {
         switch self {
         case .recipes: "books.vertical"
