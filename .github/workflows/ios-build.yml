@@ -1,0 +1,49 @@
+name: iPhone and iPad simulator build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-build.yml'
+  pull_request:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-build.yml'
+
+jobs:
+  simulator:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: |
+          xcodebuild -version
+          xcrun simctl list devices available
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Xcode project
+        working-directory: ios
+        run: xcodegen generate --spec project.yml
+      - name: Build universal iOS app for simulator
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project KitchenCurator.xcodeproj \
+            -scheme KitchenCurator \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/KitchenCuratorDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+      - name: Upload build diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kitchen-curator-ios-build-diagnostics
+          path: ~/Library/Logs/DiagnosticReports/
+          if-no-files-found: ignore
