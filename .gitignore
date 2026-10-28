@@ -1,0 +1,20 @@
+# Generated Xcode project and build output
+ios/*.xcodeproj/
+ios/*.xcworkspace/
+ios/.build/
+ios/build/
+ios/DerivedData/
+*.xcuserstate
+*.xcuserdata/
+.DS_Store
+
+# Python / PyInstaller
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+build/
+dist/
+release/
+*.spec
