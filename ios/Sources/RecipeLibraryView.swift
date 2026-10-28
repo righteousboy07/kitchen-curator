@@ -71,8 +71,8 @@ struct RecipeDetailView: View {
             }
             if !recipe.steps.isEmpty {
                 Section("Directions") {
-                    ForEach(Array(recipe.steps.enumerated()), id: \.element.id) { index, step in
-                        Text("\(index + 1). \(step.text)")
+                    ForEach(recipe.steps.indices, id: \.self) { index in
+                        Text("\(index + 1). \(recipe.steps[index].text)")
                     }
                 }
             }
